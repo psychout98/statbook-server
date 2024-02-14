@@ -54,8 +54,8 @@ app.post("/team", async (req, res) => {
         if (existingTeam) {
             const players = client.db("chess").collection("players")
             const games = client.db("chess").collection("games")
-            const existingPlayers = (await players.find({ teamid: existingTeam._id.toString() }).toArray()).map(player => { return { id: player._id.toString(), name: player.name } })
-            const existingGames = (await games.find({ teamid: existingTeam._id.toString() }).toArray()).map(game => game._id)
+            const existingPlayers = await players.find({ teamid: existingTeam._id.toString() }).toArray()
+            const existingGames = await games.find({ teamid: existingTeam._id.toString() }).toArray()
             res.status(200).json({ ...existingTeam, players: existingPlayers, games: existingGames })
         } else {
             const insertTeam = await teams.insertOne({
@@ -137,13 +137,27 @@ app.delete("/game", async (req, res) => {
 
 app.put("/play", async (req, res) => {
     try {
+        const games = client.db("chess").collection("games")
+        const updateGame = await games.findOneAndUpdate({ _id: new ObjectId(req.query.gameid) },
+        {
+            $push: {
+                history: {
+                    playerid: req.query.playerid,
+                    play1: req.query.play1,
+                    play2: req.query.play2
+                }
+            }
+        }, {
+            returnDocument: "after"
+        })
+        if (updateGame) {
         const stats = client.db("chess").collection("stats")
         const existingStat = await stats.findOne({
             gameid: req.query.gameid,
             playerid: req.query.playerid
         })
         if (existingStat) {
-            const inc = await stats.updateOne({
+            await stats.updateOne({
                 gameid: req.query.gameid,
                 playerid: req.query.playerid
             },
@@ -153,24 +167,19 @@ app.put("/play", async (req, res) => {
                         [req.query.play2]: 1
                     } : {
                         [req.query.play] : 1
-                    },
-                    $push: {
-                        history: {
-                            playerid: req.query.playerid,
-                            play1: req.query.play1,
-                            play2: req.query.play2
-                        }
                     }
                 })
-            res.status(200).send(inc.acknowledged)
         } else {
-            const insertStat = await stats.insertOne({
+            await stats.insertOne({
                 ...baseStats,
                 gameid: req.query.gameid,
                 playerid: req.query.playerid
             })
-            res.status(200).send(insertStat.acknowledged)
         }
+        res.status(200).json(updateGame)
+    } else {
+        res.status(404).send('Game not found')
+    }
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
@@ -179,10 +188,19 @@ app.put("/play", async (req, res) => {
 
 app.put("/undo", async (req, res) => {
     try {
+        const lastPlay = req.body.lastPlay
         const games = client.db("chess").collection("games")
-        const existingGame = await games.findOne({ _id: new ObjectId(req.query.gameid) })
-        if (existingGame && existingGame.history.length > 0) {
-            const lastPlay = existingGame.history[existingGame.history.length - 1]
+        const updateGame = await games.findOneAndUpdate({ _id: new ObjectId(req.query.gameid) }, {
+            $push: {
+                undos: lastPlay
+            },
+            $pop: {
+                history: 1
+            }
+        }, {
+            returnDocument: "after"
+        })
+        if (updateGame) {
             const stats = client.db("chess").collection("stats")
             const dec = await stats.updateOne({
                 gameid: req.query.gameid,
@@ -194,15 +212,13 @@ app.put("/undo", async (req, res) => {
                     [lastPlay.play2]: -1
                 } : {
                     [lastPlay.play]: -1
-                },
-                $push: {
-                    undos: lastPlay
-                },
-                $pop: {
-                    history: 1
                 }
             })
-            res.status(200).json(dec.acknowledged)
+            if (dec.acknowledged) {
+                res.status(200).json(updateGame)
+            } else {
+                res.status(500).send('Failed to undo')
+            }
         } else {
             res.status(404).send('Invalid game id')
         }
@@ -214,10 +230,18 @@ app.put("/undo", async (req, res) => {
 
 app.put("/redo", async (req, res) => {
     try {
+        const lastUndo = req.body.lastUndo
         const games = client.db("chess").collection("games")
-        const existingGame = await games.findOne({ _id: new ObjectId(req.query.gameid) })
-        if (existingGame && existingGame.undos.length > 0) {
-            const lastUndo = existingGame.undos[existingGame.history.length - 1]
+        const updateGame = await games.findOneAndUpdate({ _id: new ObjectId(req.query.gameid) },
+        {
+            $push: {
+                history: lastUndo
+            },
+            $pop: {
+                undos: 1
+            }
+        })
+        if (updateGame) {
             const stats = client.db("chess").collection("stats")
             const dec = await stats.updateOne({
                 gameid: req.query.gameid,
@@ -229,15 +253,13 @@ app.put("/redo", async (req, res) => {
                     [lastUndo.play2]: 1
                 } : {
                     [lastUndo.play]: 1
-                },
-                $push: {
-                    history: lastUndo
-                },
-                $pop: {
-                    undos: 1
                 }
             })
-            res.status(200).json(dec.acknowledged)
+            if (dec.acknowledged) {
+                res.status(200).json(updateGame)
+            } else {
+                res.status(500).send('Failed to redo')
+            }
         } else {
             res.status(404).send('Invalid game id')
         }
