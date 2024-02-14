@@ -2,7 +2,26 @@ const express = require('express')
 const app = express()
 var cors = require('cors');
 require('dotenv').config()
-import { categories, plays, baseStats } from './statbook';
+const baseStats = {
+    'svace': 0,
+    'svatt': 0,
+    'sverr': 0,
+    'srdig': 0,
+    'sratt': 0,
+    'srerr': 0,
+    'dfdig': 0,
+    'dfatt': 0,
+    'dferr': 0,
+    'spkll': 0,
+    'spatt': 0,
+    'sperr': 0,
+    'block': 0,
+    'bktch': 0,
+    'bkerr': 0,
+    'stast': 0,
+    'stdmp': 0,
+    'sterr': 0
+}
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://psychout09:${process.env.GOOGLE_PASSWORD}@chess.nibctnb.mongodb.net/?retryWrites=true&w=majority`;
@@ -235,8 +254,8 @@ async function run() {
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-    app.listen(3000, () => {
-        console.log('Running on port 3000')
+    app.listen(process.env.PORT, () => {
+        console.log('Running')
     })
 }
 run().catch(console.dir);
