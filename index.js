@@ -188,17 +188,17 @@ app.put("/play", async (req, res) => {
             }, {
             returnDocument: "after"
         })
-        const inc = { ...baseStats }
-        inc[req.query.play1] = 1
-        if (req.query.play2) {
-            inc[req.query.play2] = 1
-        }
         if (updateGame) {
             const stats = client.db("chess").collection("stats")
             const existingStat = await stats.findOne({
                 gameid: req.query.gameid,
                 playerid: req.query.playerid
             })
+            const inc = { ...baseStats }
+            inc[req.query.play1] = 1
+            if (req.query.play2) {
+                inc[req.query.play2] = 1
+            }
             if (existingStat) {
                 await stats.updateOne({
                     gameid: req.query.gameid,
@@ -209,7 +209,7 @@ app.put("/play", async (req, res) => {
                     })
             } else {
                 await stats.insertOne({
-                    ...baseStats,
+                    ...inc,
                     gameid: req.query.gameid,
                     playerid: req.query.playerid
                 })
@@ -237,15 +237,17 @@ app.put("/undo", async (req, res) => {
         })
         if (updateGame) {
             const stats = client.db("chess").collection("stats")
+            const inc = { ...baseStats }
+            inc[lastPlay.play1] = -1
+            if (lastPlay.play2) {
+                inc[lastPlay.play2] = -1
+            }
             const dec = await stats.updateOne({
                 gameid: req.query.gameid,
                 playerid: lastPlay.playerid
             },
                 {
-                    $inc: {
-                        [lastPlay.play]: 1,
-                        [lastPlay.play2]: lastPlay.play2 ? 1 : 0
-                    }
+                    $inc: inc
                 })
             if (dec.acknowledged) {
                 res.status(200).json(updateGame)
@@ -275,15 +277,17 @@ app.put("/redo", async (req, res) => {
         })
         if (updateGame) {
             const stats = client.db("chess").collection("stats")
+            const inc = { ...baseStats }
+            inc[lastUndo.play1] = 1
+            if (lastUndo.play2) {
+                inc[lastUndo.play2] = 1
+            }
             const dec = await stats.updateOne({
                 gameid: req.query.gameid,
                 playerid: lastUndo.playerid
             },
                 {
-                    $inc: {
-                        [lastUndo.play]: 1,
-                        [lastUndo.play2]: lastUndo.play2 ? 1 : 0
-                    }
+                    $inc: inc
                 })
             if (dec.acknowledged) {
                 res.status(200).json(updateGame)
