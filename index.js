@@ -313,7 +313,7 @@ app.post("/stats", async (req, res) => {
                     a[stat] += b[stat]
                 })
                 return a
-            }, baseStats)
+            }, [...baseStats])
             return {
                 ...allStatsForPlayer,
                 playerid: playerid
