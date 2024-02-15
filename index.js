@@ -188,6 +188,11 @@ app.put("/play", async (req, res) => {
             }, {
             returnDocument: "after"
         })
+        const inc = { ...baseStats }
+        inc[req.query.play1] = 1
+        if (req.query.play2) {
+            inc[req.query.play2] = 1
+        }
         if (updateGame) {
             const stats = client.db("chess").collection("stats")
             const existingStat = await stats.findOne({
@@ -200,10 +205,7 @@ app.put("/play", async (req, res) => {
                     playerid: req.query.playerid
                 },
                     {
-                        $inc: {
-                            [req.query.play]: 1,
-                            [req.query.play2]: req.query.play2 ? 1 : 0
-                        }
+                        $inc: inc
                     })
             } else {
                 await stats.insertOne({
