@@ -97,7 +97,7 @@ app.delete("/player", async (req, res) => {
 app.post("/game", async (req, res) => {
     try {
         const games = client.db("chess").collection("games")
-        const insertGame = await games.insertOne({
+        const newGame = {
             teamid: req.query.teamid,
             opponent: req.query.opponent,
             game: req.query.game,
@@ -105,8 +105,12 @@ app.post("/game", async (req, res) => {
             date: new Date().getTime(),
             history: [],
             undos: []
+        }
+        const insertGame = await games.insertOne(newGame)
+        res.status(200).json({
+            ...newGame,
+            _id: insertGame.insertedId
         })
-        res.status(200).json(insertGame.insertedId)
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
@@ -191,9 +195,6 @@ app.put("/undo", async (req, res) => {
         const lastPlay = req.body.lastPlay
         const games = client.db("chess").collection("games")
         const updateGame = await games.findOneAndUpdate({ _id: new ObjectId(req.query.gameid) }, {
-            $push: {
-                undos: lastPlay
-            },
             $pop: {
                 history: 1
             }
@@ -236,9 +237,6 @@ app.put("/redo", async (req, res) => {
         {
             $push: {
                 history: lastUndo
-            },
-            $pop: {
-                undos: 1
             }
         })
         if (updateGame) {
