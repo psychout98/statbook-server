@@ -132,14 +132,14 @@ app.put("/game", async (req, res) => {
     try {
         const games = client.db("chess").collection("games")
         const updateGame = await games.updateOne({ _id: new ObjectId(req.query.gameid) },
-        {
-            opponent: req.query.opponent,
-            game: req.query.game,
-            set: req.query.set
-        }, {
-            returnDocument: 'after'
-        })
-        res.status(200).json(updateGame)
+            {
+                $set: {
+                    opponent: req.query.opponent,
+                    game: req.query.game,
+                    set: req.query.set
+                }
+            })
+        res.status(200).json(updateGame.acknowledged)
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
@@ -161,47 +161,47 @@ app.put("/play", async (req, res) => {
     try {
         const games = client.db("chess").collection("games")
         const updateGame = await games.findOneAndUpdate({ _id: new ObjectId(req.query.gameid) },
-        {
-            $push: {
-                history: {
-                    playerid: req.query.playerid,
-                    play1: req.query.play1,
-                    play2: req.query.play2
+            {
+                $push: {
+                    history: {
+                        playerid: req.query.playerid,
+                        play1: req.query.play1,
+                        play2: req.query.play2
+                    }
                 }
-            }
-        }, {
+            }, {
             returnDocument: "after"
         })
         if (updateGame) {
-        const stats = client.db("chess").collection("stats")
-        const existingStat = await stats.findOne({
-            gameid: req.query.gameid,
-            playerid: req.query.playerid
-        })
-        if (existingStat) {
-            await stats.updateOne({
-                gameid: req.query.gameid,
-                playerid: req.query.playerid
-            },
-                {
-                    $inc: req.query.play2 ? {
-                        [req.query.play]: 1,
-                        [req.query.play2]: 1
-                    } : {
-                        [req.query.play] : 1
-                    }
-                })
-        } else {
-            await stats.insertOne({
-                ...baseStats,
+            const stats = client.db("chess").collection("stats")
+            const existingStat = await stats.findOne({
                 gameid: req.query.gameid,
                 playerid: req.query.playerid
             })
+            if (existingStat) {
+                await stats.updateOne({
+                    gameid: req.query.gameid,
+                    playerid: req.query.playerid
+                },
+                    {
+                        $inc: req.query.play2 ? {
+                            [req.query.play]: 1,
+                            [req.query.play2]: 1
+                        } : {
+                            [req.query.play]: 1
+                        }
+                    })
+            } else {
+                await stats.insertOne({
+                    ...baseStats,
+                    gameid: req.query.gameid,
+                    playerid: req.query.playerid
+                })
+            }
+            res.status(200).json(updateGame)
+        } else {
+            res.status(404).send('Game not found')
         }
-        res.status(200).json(updateGame)
-    } else {
-        res.status(404).send('Game not found')
-    }
     } catch (error) {
         console.log(error)
         res.status(500).json(error)
@@ -225,14 +225,14 @@ app.put("/undo", async (req, res) => {
                 gameid: req.query.gameid,
                 playerid: lastPlay.playerid
             },
-            {
-                $inc: lastPlay.play2 ? {
-                    [lastPlay.play]: -1,
-                    [lastPlay.play2]: -1
-                } : {
-                    [lastPlay.play]: -1
-                }
-            })
+                {
+                    $inc: lastPlay.play2 ? {
+                        [lastPlay.play]: -1,
+                        [lastPlay.play2]: -1
+                    } : {
+                        [lastPlay.play]: -1
+                    }
+                })
             if (dec.acknowledged) {
                 res.status(200).json(updateGame)
             } else {
@@ -252,11 +252,11 @@ app.put("/redo", async (req, res) => {
         const lastUndo = req.body.lastUndo
         const games = client.db("chess").collection("games")
         const updateGame = await games.findOneAndUpdate({ _id: new ObjectId(req.query.gameid) },
-        {
-            $push: {
-                history: lastUndo
-            }
-        }, {
+            {
+                $push: {
+                    history: lastUndo
+                }
+            }, {
             returnDocument: "after"
         })
         if (updateGame) {
@@ -265,14 +265,14 @@ app.put("/redo", async (req, res) => {
                 gameid: req.query.gameid,
                 playerid: lastUndo.playerid
             },
-            {
-                $inc: lastUndo.play2 ? {
-                    [lastUndo.play]: 1,
-                    [lastUndo.play2]: 1
-                } : {
-                    [lastUndo.play]: 1
-                }
-            })
+                {
+                    $inc: lastUndo.play2 ? {
+                        [lastUndo.play]: 1,
+                        [lastUndo.play2]: 1
+                    } : {
+                        [lastUndo.play]: 1
+                    }
+                })
             if (dec.acknowledged) {
                 res.status(200).json(updateGame)
             } else {
@@ -290,7 +290,7 @@ app.put("/redo", async (req, res) => {
 app.get("/stats", async (req, res) => {
     try {
         const stats = client.db("chess").collection("stats")
-        const statData = await stats.find({ $and: [{ playerid: { $in: req.body.players }}, { gameid: { $in: req.query.games }}]}).toArray()
+        const statData = await stats.find({ $and: [{ playerid: { $in: req.body.players } }, { gameid: { $in: req.query.games } }] }).toArray()
         const statsByPlayer = req.body.players.map(playerid => {
             const allStatsForPlayer = statData.filter({ playerid: playerid }).reduce((a, b) => {
                 Object.keys(baseStats).forEach(stat => {
