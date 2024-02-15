@@ -200,11 +200,9 @@ app.put("/play", async (req, res) => {
                     playerid: req.query.playerid
                 },
                     {
-                        $inc: req.query.play2 ? {
+                        $inc: {
                             [req.query.play]: 1,
-                            [req.query.play2]: 1
-                        } : {
-                            [req.query.play]: 1
+                            [req.query.play2]: req.query.play2 ? 1 : 0
                         }
                     })
             } else {
@@ -242,11 +240,9 @@ app.put("/undo", async (req, res) => {
                 playerid: lastPlay.playerid
             },
                 {
-                    $inc: lastPlay.play2 ? {
-                        [lastPlay.play]: -1,
-                        [lastPlay.play2]: -1
-                    } : {
-                        [lastPlay.play]: -1
+                    $inc: {
+                        [lastPlay.play]: 1,
+                        [lastPlay.play2]: lastPlay.play2 ? 1 : 0
                     }
                 })
             if (dec.acknowledged) {
@@ -282,11 +278,9 @@ app.put("/redo", async (req, res) => {
                 playerid: lastUndo.playerid
             },
                 {
-                    $inc: lastUndo.play2 ? {
+                    $inc: {
                         [lastUndo.play]: 1,
-                        [lastUndo.play2]: 1
-                    } : {
-                        [lastUndo.play]: 1
+                        [lastUndo.play2]: lastUndo.play2 ? 1 : 0
                     }
                 })
             if (dec.acknowledged) {
@@ -313,7 +307,7 @@ app.post("/stats", async (req, res) => {
                     a[stat] += b[stat]
                 })
                 return a
-            }, {})
+            })
             return {
                 ...allStatsForPlayer,
                 playerid: playerid
