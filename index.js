@@ -308,7 +308,7 @@ app.post("/stats", async (req, res) => {
         const stats = client.db("chess").collection("stats")
         const statData = await stats.find({ $and: [{ playerid: { $in: req.body.players } }, { gameid: { $in: req.body.games } }] }).toArray()
         const statsByPlayer = req.body.players.map(playerid => {
-            const allStatsForPlayer = statData.filter({ playerid: playerid }).reduce((a, b) => {
+            const allStatsForPlayer = statData.filter(stat => stat.playerid === playerid).reduce((a, b) => {
                 Object.keys(baseStats).forEach(stat => {
                     a[stat] += b[stat]
                 })
