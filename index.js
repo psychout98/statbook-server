@@ -128,6 +128,24 @@ app.get("/game", async (req, res) => {
     }
 })
 
+app.put("/game", async (req, res) => {
+    try {
+        const games = client.db("chess").collection("games")
+        const updateGame = await games.updateOne({ _id: new ObjectId(req.query.gameid) },
+        {
+            opponent: req.query.opponent,
+            game: req.query.game,
+            set: req.query.set
+        }, {
+            returnDocument: 'after'
+        })
+        res.status(200).json(updateGame)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
+
 app.delete("/game", async (req, res) => {
     try {
         const games = client.db("chess").collection("games")
