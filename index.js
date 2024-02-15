@@ -306,7 +306,7 @@ app.put("/redo", async (req, res) => {
 app.get("/stats", async (req, res) => {
     try {
         const stats = client.db("chess").collection("stats")
-        const statData = await stats.find({ $and: [{ playerid: { $in: req.body.players } }, { gameid: { $in: req.query.games } }] }).toArray()
+        const statData = await stats.find({ $and: [{ playerid: { $in: req.body.players } }, { gameid: { $in: req.body.games } }] }).toArray()
         const statsByPlayer = req.body.players.map(playerid => {
             const allStatsForPlayer = statData.filter({ playerid: playerid }).reduce((a, b) => {
                 Object.keys(baseStats).forEach(stat => {
