@@ -83,6 +83,22 @@ app.post("/player", async (req, res) => {
     }
 })
 
+app.put("/player", async (req, res) => {
+    try {
+        const players = client.db("chess").collection("players")
+        const updatePlayer = await players.updateOne({ _id: new ObjectId(req.query.playerid) },
+            {
+                $set: {
+                    name: req.query.name
+                }
+            })
+        res.status(200).json(updatePlayer.acknowledged)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
+
 app.delete("/player", async (req, res) => {
     try {
         const players = client.db("chess").collection("players")
