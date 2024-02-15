@@ -238,6 +238,8 @@ app.put("/redo", async (req, res) => {
             $push: {
                 history: lastUndo
             }
+        }, {
+            returnDocument: "after"
         })
         if (updateGame) {
             const stats = client.db("chess").collection("stats")
