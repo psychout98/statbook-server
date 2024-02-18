@@ -334,7 +334,7 @@ app.get("/stats", async (req, res) => {
             .toArray())
             .map((player) => player._id)
         const stats = client.db("chess").collection("stats")
-        const statData = await stats.find({ playerid: { $in: req.body.players } }).toArray()
+        const statData = await stats.find({ playerid: { $in: players } }).toArray()
         const totals = { ...baseStats }
         statData.forEach((stat) => {
             Object.keys(baseStats).forEach((code) => {
