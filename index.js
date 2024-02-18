@@ -328,19 +328,23 @@ app.post("/stats", async (req, res) => {
 
 app.get("/stats", async (req, res) => {
     try {
+        const teams = client.db("chess").collection("teams")
+        const existingTeam = await teams.findOne({ teamname: req.query.teamname })
         const players = client.db("chess").collection("players")
         const existingPlayers = (await players
-            .find({ teamid: req.query.teamid })
+            .find({ teamid: existingTeam._id.toString() })
             .toArray())
-            .map((player) => player._id)
+            .map((player) => player._id.toString())
+        // console.log(existingPlayers)
         const stats = client.db("chess").collection("stats")
         const statData = await stats.find({ playerid: { $in: existingPlayers } }).toArray()
-        const totals = { ...baseStats }
-        statData.forEach((stat) => {
-            Object.keys(baseStats).forEach((code) => {
-                totals[code] += stat[code]
+        // console.log(statData)
+        const totals = statData.reduce((a, b) => {
+            Object.keys(baseStats).forEach(stat => {
+                a[stat] += b[stat]
             })
-        })
+            return a
+        }, { ...baseStats })
         res.status(200).json(totals)
     } catch (error) {
         console.log(error)
