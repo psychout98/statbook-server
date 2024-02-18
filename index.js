@@ -326,6 +326,28 @@ app.post("/stats", async (req, res) => {
     }
 })
 
+app.get("/stats", async (req, res) => {
+    try {
+        const players = client.db("chess").collection("players")
+        const existingPlayers = (await players
+            .find({ teamid: existingTeam._id.toString() })
+            .toArray())
+            .map((player) => player._id)
+        const stats = client.db("chess").collection("stats")
+        const statData = await stats.find({ playerid: { $in: req.body.players } }).toArray()
+        const totals = { ...baseStats }
+        statData.forEach((stat) => {
+            Object.keys(baseStats).forEach((code) => {
+                totals[code] += stat[code]
+            })
+        })
+        res.status(200).json(totals)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+})
+
 
 async function run() {
     // Connect the client to the server	(optional starting in v4.7)
