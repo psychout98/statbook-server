@@ -330,7 +330,7 @@ app.get("/stats", async (req, res) => {
     try {
         const players = client.db("chess").collection("players")
         const existingPlayers = (await players
-            .find({ teamid: existingTeam._id.toString() })
+            .find({ teamid: req.query.teamid })
             .toArray())
             .map((player) => player._id)
         const stats = client.db("chess").collection("stats")
