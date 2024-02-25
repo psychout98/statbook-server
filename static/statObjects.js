@@ -1,0 +1,20 @@
+export const baseStats = {
+    'svace': 0,
+    'svatt': 0,
+    'sverr': 0,
+    'srdig': 0,
+    'sratt': 0,
+    'srerr': 0,
+    'dfdig': 0,
+    'dfatt': 0,
+    'dferr': 0,
+    'spkll': 0,
+    'spatt': 0,
+    'sperr': 0,
+    'block': 0,
+    'bktch': 0,
+    'bkerr': 0,
+    'stast': 0,
+    'stdmp': 0,
+    'sterr': 0
+}
