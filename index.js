@@ -4,7 +4,7 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 dotenv.config()
 import { router as statRoutes } from "./routes/stats.js"
-import * as jwt from 'jsonwebtoken'
+import { router as authRoutes } from "./routes/auth.js"
 
 import { MongoClient, ServerApiVersion } from 'mongodb';
 const uri = `mongodb+srv://psychout09:${process.env.MONGO_PASSWORD}@statbook.lzrum1z.mongodb.net/?retryWrites=true&w=majority`;
@@ -38,7 +38,8 @@ app.use((req, res, next) => {
     next()
 })
 
-app.use("/api/v2", statRoutes)
+app.use("/api/v2/app", statRoutes)
+app.use("/api/v2/auth", authRoutes)
 
 async function run() {
     // Connect the client to the server	(optional starting in v4.7)

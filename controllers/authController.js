@@ -11,7 +11,7 @@ export default class AuthController {
                 const users = client.db("volleyball").collection("users")
                 const existingUser = await users.findOne({ username: req.body.username })
                 if (existingUser) {
-                    res.status(400).send('Username taken')
+                    res.status(400).json({ message: 'Username taken' })
                 } else {
                     const insertUser = await users.insertOne({
                         username: req.body.username,
@@ -28,10 +28,10 @@ export default class AuthController {
                     res.status(200).json({ token })
                 }
             })
-            .catch((e) => {
-                response.status(500).send({
+            .catch((error) => {
+                response.status(500).json({
                     message: "Password was not hashed successfully",
-                    e,
+                    error
                 })
             })
     }
@@ -44,7 +44,7 @@ export default class AuthController {
                 .then(async (passwordCheck) => {
                     if (!passwordCheck) {
                         return res.status(400).json({
-                            message: "Passwords does not match",
+                            message: "Password does not match",
                             error,
                         })
                     }
