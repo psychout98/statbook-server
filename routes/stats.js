@@ -1,6 +1,6 @@
 import StatController from "../controllers/statController.js";
 import express from "express";
-import * as jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken"
 
 export const router = express.Router()
 
@@ -11,9 +11,8 @@ router.use(async (req, res, next) => {
         req.user = decodedToken
         next()
       } catch (error) {
-        res.status(401).json({
-          error: new Error("Invalid request!"),
-        })
+        console.log(error)
+        res.status(401).send()
       }
 })
 
