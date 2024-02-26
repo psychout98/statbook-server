@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb"
 export default class AuthController {
 
     async register(req, res) {
-        bcrypt.hash(request.body.password, 10)
+        bcrypt.hash(req.body.password, 10)
             .then(async (hashedPassword) => {
                 const users = client.db("volleyball").collection("users")
                 const existingUser = await users.findOne({ username: req.body.username })
