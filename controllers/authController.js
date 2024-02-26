@@ -29,7 +29,7 @@ export default class AuthController {
                 }
             })
             .catch((error) => {
-                response.status(500).json({
+                res.status(500).json({
                     message: "Password was not hashed successfully",
                     error
                 })
