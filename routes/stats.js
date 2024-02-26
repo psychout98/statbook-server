@@ -43,3 +43,5 @@ router.put("/undo", statController.undo.bind(statController))
 router.put("/redo", statController.redo.bind(statController))
 
 router.post("/stats", statController.getStats.bind(statController))
+
+router.put("/member", statController.updateAccess.bind(statController))

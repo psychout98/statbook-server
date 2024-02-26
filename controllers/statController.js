@@ -393,4 +393,35 @@ export default class StatController {
             res.status(500).json({ ...error, message: 'internal server error. try again later' })
         }
     }
+
+    async updateAccess(req, res) {
+        if (req.user.canEdit) {
+            const teams = client.db("volleyball").collection("teams")
+            const existingTeam = await teams.findOne({ teamname: req.query.teamname })
+            if (existingTeam) {
+                const viewers = existingTeam.viewers
+                const editors = existingTeam.editors
+                if (req.query.canEdit === "true" && viewers.includes(req.query.member) && !editors.includes(req.query.member)) {
+                    viewers.splice(viewers.findIndex(m => m === req.query.member), 1)
+                    editors.push(req.query.member)
+                } else if (req.query.canEdit === "false" && !viewers.includes(req.query.member) && editors.includes(req.query.member)) {
+                    editors.splice(viewers.findIndex(m => m === req.query.member), 1)
+                    viewers.push(req.query.member)
+                } else {
+                    return res.status(400).send()
+                }
+                const updateTeam = await teams.updateOne({ teamname: req.query.teamname }, {
+                    $set: {
+                        viewers,
+                        editors
+                    }
+                })
+                res.status(200).send(updateTeam)
+            } else {
+                res.status(404).send()
+            }
+        } else {
+            res.status(401).send()
+        }
+    }
 }
