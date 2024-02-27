@@ -55,17 +55,17 @@ export default class StatController {
                 if (req.body.joinCode === existingTeam.editorCode) {
                     await teams.updateOne({ teamname: req.body.teamname }, {
                         $push: {
-                            editors: req.body.username
+                            editors: username
                         }
                     })
-                    existingTeam.editors.push(req.body.username)
+                    existingTeam.editors.push(username)
                 } else if (req.body.joinCode === existingTeam.viewerCode) {
                     await teams.updateOne({ teamname: req.body.teamname }, {
                         $push: {
-                            viewers: req.body.username
+                            viewers: username
                         }
                     })
-                    existingTeam.viewers.push(req.body.username)
+                    existingTeam.viewers.push(username)
                     canEdit = false
                 } else {
                     return res.status(401).json({ message: 'Invalid invite code' })
