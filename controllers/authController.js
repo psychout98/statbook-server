@@ -39,7 +39,8 @@ export default class AuthController {
 
     async login(req, res) {
         const users = client.db("volleyball").collection("users")
-        const existingUser = await users.findOne({ username: req.body.username })
+        const username = req.body.username.toLowerCase()
+        const existingUser = await users.findOne({ username: username })
         if (existingUser) {
             bcrypt.compare(req.body.password, existingUser.password)
                 .then(async (passwordCheck) => {
@@ -56,8 +57,8 @@ export default class AuthController {
                         const teamData = { ...existingTeam, players: existingPlayers, games: existingGames }
                         const token = jwt.sign(
                             {
-                                username: req.body.username,
-                                canEdit: existingTeam.editors.includes(req.body.username)
+                                username,
+                                canEdit: existingTeam.editors.includes(username)
                             },
                             "RANDOM-TOKEN",
                             { expiresIn: "24h" }
@@ -66,7 +67,7 @@ export default class AuthController {
                     } else {
                         const token = jwt.sign(
                             {
-                                username: req.body.username
+                                username
                             },
                             "RANDOM-TOKEN",
                             { expiresIn: "24h" }
