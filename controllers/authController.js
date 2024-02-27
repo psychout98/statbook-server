@@ -5,8 +5,9 @@ import jwt from "jsonwebtoken"
 export default class AuthController {
 
     async register(req, res) {
-        if (!/^(?=.{8,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/.test(req.body.username)) {
-            return res.status(401).send()
+        if (!/^(?=.{8,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$/.test(req.body.username) ||
+            !/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/.test(req.body.password)) {
+            return res.status(400).send()
         }
         bcrypt.hash(req.body.password, 10)
             .then(async (hashedPassword) => {
