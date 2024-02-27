@@ -71,7 +71,7 @@ export default class StatController {
                     return res.status(401).json({ message: 'Invalid invite code' })
                 }
                 const users = client.db("volleyball").collection("users")
-                await users.updateOne({ username: req.body.username }, { $set: { teamid: existingTeam._id } })
+                await users.updateOne({ username }, { $set: { teamid: existingTeam._id } })
                 const players = client.db("volleyball").collection("players")
                 const games = client.db("volleyball").collection("games")
                 const existingPlayers = await players.find({ teamid: existingTeam._id.toString() }).toArray()
